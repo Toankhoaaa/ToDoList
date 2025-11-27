@@ -4,8 +4,8 @@ import dbApi from '../api/dbApi';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('hub_token') || null);
+  // Authentication removed: use a default guest user so UI can access stats
+  const [user, setUser] = useState({ id: 'guest', username: 'Khách' });
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
 
@@ -14,75 +14,35 @@ export const AuthProvider = ({ children }) => {
       const userStats = await dbApi.getStats(userId);
       setStats(userStats);
     } catch (error) {
-      console.error("Failed to fetch stats:", error);
+      console.error('Failed to fetch stats:', error);
     }
   };
 
   useEffect(() => {
-    const initAuth = async () => {
-      if (token) {
-        try {
-          const userData = await dbApi.getUserFromToken(token);
-          if (userData) {
-            setUser(userData);
-            // Chạy kiểm tra hàng ngày
-            const checkResult = await dbApi.runDailyCheck(userData.id);
-            if (checkResult) {
-               console.log(checkResult.message);
-               // Có thể hiển thị thông báo cho user
-            }
-            await fetchUserStats(userData.id);
-          } else {
-            // Token không hợp lệ
-            localStorage.removeItem('hub_token');
-            setToken(null);
-          }
-        } catch (error) {
-          console.error("Auth init error:", error);
-          localStorage.removeItem('hub_token');
-          setToken(null);
-        }
-      }
+    const init = async () => {
+      // Always initialize with guest user stats
+      await fetchUserStats(user.id);
       setLoading(false);
     };
-    initAuth();
-  }, [token]);
-  
-  const login = async (username, password) => {
-    const { token, user } = await dbApi.login(username, password);
-    setToken(token);
-    setUser(user);
-    await fetchUserStats(user.id);
-  };
-
-  const signup = async (username, password) => {
-    const { token, user } = await dbApi.signup(username, password);
-    setToken(token);
-    setUser(user);
-    await fetchUserStats(user.id);
-  };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const logout = () => {
-    dbApi.logout();
-    setToken(null);
-    setUser(null);
+    // Reset to guest
+    setUser({ id: 'guest', username: 'Khách' });
     setStats(null);
   };
-  
-  const updateStats = (newStats) => {
-    setStats(newStats);
-  };
+
+  const updateStats = (newStats) => setStats(newStats);
 
   const value = {
     user,
-    token,
     stats,
-    isAuthenticated: !!user,
+    isAuthenticated: false,
     loading,
-    login,
-    signup,
     logout,
-    updateStats, // Để cập nhật điểm khi cần
+    updateStats,
     refreshStats: () => fetchUserStats(user.id)
   };
 

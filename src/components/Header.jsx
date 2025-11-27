@@ -32,14 +32,16 @@ const Header = ({ onNavigate, isDarkMode, toggleDarkMode }) => {
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <span className="text-gray-700 dark:text-gray-300 text-sm">Chào, {user.username}</span>
-            <button
-              onClick={logout}
-              className="flex items-center text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              <LogOut size={18} className="mr-1" />
-              Đăng xuất
-            </button>
+            <span className="text-gray-700 dark:text-gray-300 text-sm">Chào, {user ? user.username : 'Khách'}</span>
+            {user && (
+              <button
+                onClick={logout}
+                className="flex items-center text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                <LogOut size={18} className="mr-1" />
+                Đăng xuất
+              </button>
+            )}
           </div>
         </div>
       </nav>

@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 const PomodoroTimer = ({ onSessionComplete }) => {
-  const [workDuration, setWorkDuration] = useState(25);
-  const [breakDuration, setBreakDuration] = useState(5);
+  // Keep durations as strings so user can clear input while typing
+  const [workDuration, setWorkDuration] = useState('25');
+  const [breakDuration, setBreakDuration] = useState('5');
 
-  const [minutes, setMinutes] = useState(workDuration);
+  const [minutes, setMinutes] = useState(Number(workDuration));
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
@@ -64,20 +65,26 @@ const PomodoroTimer = ({ onSessionComplete }) => {
     }
   };
 
-  // Cập nhật bộ đếm nếu thời lượng thay đổi khi không hoạt động
+  // Update minutes when durations change *only* (don't run when pausing)
   useEffect(() => {
+    if (workDuration === '') return; // allow user to clear input while typing
+    const w = Math.max(1, parseInt(workDuration, 10) || 1);
     if (!isActive && !isBreak) {
-      setMinutes(workDuration);
+      setMinutes(w);
       setSeconds(0);
     }
-  }, [workDuration, isActive, isBreak]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workDuration]);
 
   useEffect(() => {
+    if (breakDuration === '') return;
+    const b = Math.max(1, parseInt(breakDuration, 10) || 1);
     if (!isActive && isBreak) {
-      setMinutes(breakDuration);
+      setMinutes(b);
       setSeconds(0);
     }
-  }, [breakDuration, isActive, isBreak]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [breakDuration]);
 
 
   const startTimer = () => {
@@ -132,11 +139,11 @@ const PomodoroTimer = ({ onSessionComplete }) => {
     clearInterval(intervalRef.current);
     setIsActive(false);
     if (startBreak) {
-      setMinutes(breakDuration);
+      setMinutes(Math.max(1, parseInt(breakDuration, 10) || 1));
       setSeconds(0);
       setIsBreak(true);
     } else {
-      setMinutes(workDuration);
+      setMinutes(Math.max(1, parseInt(workDuration, 10) || 1));
       setSeconds(0);
       setIsBreak(false);
     }
@@ -155,9 +162,11 @@ const PomodoroTimer = ({ onSessionComplete }) => {
   }, []);
 
   const timeDisplay = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  
+
   // Tính toán phần trăm dựa trên thời lượng động
-  const totalDurationInSeconds = isBreak ? breakDuration * 60 : workDuration * 60;
+  const workNum = Math.max(1, parseInt(workDuration, 10) || 1);
+  const breakNum = Math.max(1, parseInt(breakDuration, 10) || 1);
+  const totalDurationInSeconds = isBreak ? breakNum * 60 : workNum * 60;
   const elapsedInSeconds = totalDurationInSeconds - (minutes * 60 + seconds);
   const progressPercent = totalDurationInSeconds > 0 ? (elapsedInSeconds / totalDurationInSeconds) * 100 : 0;
 
@@ -177,7 +186,12 @@ const PomodoroTimer = ({ onSessionComplete }) => {
               id="workDuration"
               type="number"
               value={workDuration}
-              onChange={(e) => setWorkDuration(Math.max(1, e.target.valueAsNumber || 1))}
+              onChange={(e) => setWorkDuration(e.target.value)}
+              onBlur={() => {
+                if (workDuration === '' || isNaN(parseInt(workDuration, 10))) {
+                  setWorkDuration('1');
+                }
+              }}
               className="w-20 p-2 text-center border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -187,7 +201,12 @@ const PomodoroTimer = ({ onSessionComplete }) => {
               id="breakDuration"
               type="number"
               value={breakDuration}
-              onChange={(e) => setBreakDuration(Math.max(1, e.target.valueAsNumber || 1))}
+              onChange={(e) => setBreakDuration(e.target.value)}
+              onBlur={() => {
+                if (breakDuration === '' || isNaN(parseInt(breakDuration, 10))) {
+                  setBreakDuration('1');
+                }
+              }}
               className="w-20 p-2 text-center border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>

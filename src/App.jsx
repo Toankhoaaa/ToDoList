@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import Header from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 import CommitmentFundPage from './pages/CommitmentFundPage';
-import AuthPage from './pages/AuthPage';
 
 const AppContent = () => {
-  const { isAuthenticated } = useAuth();
   const [page, setPage] = useState('dashboard'); // 'dashboard' | 'commitment'
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (localStorage.theme === 'dark') {
@@ -27,9 +25,7 @@ const AppContent = () => {
 
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
   
-  if (!isAuthenticated) {
-    return <AuthPage />;
-  }
+  // Login/Signup removed: always render the app UI
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
